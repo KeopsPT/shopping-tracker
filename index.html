@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><script type='text/javascript' src='https://ppl-ai-code-interpreter-files.s3.amazonaws.com/GYlK8VEAyZpQKY_KTSRUBDQoA1iU-Ojea08ShKAi3Wq1UA9_Tfcul0Aik4RFKGu5AE1JEurOTVsgfxKe_n9z4pQTY9-GeQja3Fvax-l4FdsT1qmov9bxusGLMFzZ2TePrlz86Dl4yYPvZDY7P4GcPbf7xZVjG1PrVfWeAhwksBY='></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping Tracker Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="dashboard-header">
+            <h1>🛍️ Shopping Tracker Dashboard</h1>
+            <p class="text-secondary">Track your Christmas and Clothing purchases</p>
+        </header>
+
+        <!-- Tab Navigation -->
+        <div class="tab-navigation">
+            <button class="tab-button tab-button--christmas active" data-tab="christmas">
+                <div class="tab-icon">🎄</div>
+                <div class="tab-content">
+                    <div class="tab-title">Christmas Shopping</div>
+                    <div class="tab-stats">
+                        <span class="tab-count" id="christmas-tab-count">0 items</span>
+                        <span class="tab-total" id="christmas-tab-total">$0.00</span>
+                    </div>
+                </div>
+            </button>
+            <button class="tab-button tab-button--clothing" data-tab="clothing">
+                <div class="tab-icon">👕</div>
+                <div class="tab-content">
+                    <div class="tab-title">Clothing Shopping</div>
+                    <div class="tab-stats">
+                        <span class="tab-count" id="clothing-tab-count">0 items</span>
+                        <span class="tab-total" id="clothing-tab-total">$0.00</span>
+                    </div>
+                </div>
+            </button>
+        </div>
+
+        <!-- Tab Content Areas -->
+        <div class="tab-content-container">
+            <!-- Christmas Shopping Tab -->
+            <div class="tab-content-panel active" id="christmas-panel">
+                <section class="shopping-section christmas-section">
+                    <div class="section-header christmas-header">
+                        <div class="header-content">
+                            <h2>🎄 Christmas Shopping</h2>
+                            <div class="section-stats">
+                                <span class="item-count" id="christmas-count">0 items</span>
+                                <span class="total-price" id="christmas-total">$0.00</span>
+                            </div>
+                        </div>
+                        <div class="section-controls">
+                            <div class="controls-row">
+                                <select class="form-control sort-select" id="christmas-sort">
+                                    <option value="name">Sort by Name</option>
+                                    <option value="price-high">Price: High to Low</option>
+                                    <option value="price-low">Price: Low to High</option>
+                                    <option value="person">Sort by Person</option>
+                                    <option value="store">Sort by Store</option>
+                                </select>
+                                <input type="text" class="form-control search-input" id="christmas-search" placeholder="Search products...">
+                            </div>
+                            <div class="button-row">
+                                <button class="btn btn--primary add-product-btn" data-category="christmas">
+                                    ➕ Add Product
+                                </button>
+                                <button class="btn btn--outline clear-all-btn" data-category="christmas">
+                                    🗑️ Clear All
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="products-grid" id="christmas-grid">
+                        <div class="empty-state" id="christmas-empty">
+                            <div class="empty-icon">🎁</div>
+                            <h3>No Christmas gifts yet!</h3>
+                            <p>Start adding products to track your holiday shopping.</p>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Clothing Shopping Tab -->
+            <div class="tab-content-panel" id="clothing-panel">
+                <section class="shopping-section clothing-section">
+                    <div class="section-header clothing-header">
+                        <div class="header-content">
+                            <h2>👕 Clothing Shopping</h2>
+                            <div class="section-stats">
+                                <span class="item-count" id="clothing-count">0 items</span>
+                                <span class="total-price" id="clothing-total">$0.00</span>
+                            </div>
+                        </div>
+                        <div class="section-controls">
+                            <div class="controls-row">
+                                <select class="form-control sort-select" id="clothing-sort">
+                                    <option value="name">Sort by Name</option>
+                                    <option value="price-high">Price: High to Low</option>
+                                    <option value="price-low">Price: Low to High</option>
+                                    <option value="person">Sort by Person</option>
+                                    <option value="store">Sort by Store</option>
+                                </select>
+                                <input type="text" class="form-control search-input" id="clothing-search" placeholder="Search products...">
+                            </div>
+                            <div class="button-row">
+                                <button class="btn btn--primary add-product-btn" data-category="clothing">
+                                    ➕ Add Product
+                                </button>
+                                <button class="btn btn--outline clear-all-btn" data-category="clothing">
+                                    🗑️ Clear All
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="products-grid" id="clothing-grid">
+                        <div class="empty-state" id="clothing-empty">
+                            <div class="empty-icon">👔</div>
+                            <h3>No clothing items yet!</h3>
+                            <p>Start adding products to track your fashion purchases.</p>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Product Modal -->
+    <div class="modal hidden" id="add-product-modal">
+        <div class="modal-backdrop" id="modal-backdrop"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title">Add New Product</h3>
+                <button class="modal-close" id="modal-close">✕</button>
+            </div>
+            <form class="modal-body" id="product-form">
+                <div class="form-group">
+                    <label class="form-label" for="product-url">Product URL</label>
+                    <input type="url" class="form-control" id="product-url" required placeholder="https://example.com/product">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="product-name">Product Name</label>
+                    <input type="text" class="form-control" id="product-name" required placeholder="Enter product name">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="person-name">For Person</label>
+                    <input type="text" class="form-control" id="person-name" required placeholder="Who is this for?">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="product-price">Price</label>
+                    <input type="number" class="form-control" id="product-price" required step="0.01" min="0" placeholder="0.00">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="store-name">Store Name</label>
+                    <input type="text" class="form-control" id="store-name" required placeholder="Store or website name">
+                </div>
+            </form>
+            <div class="modal-footer">
+                <button type="button" class="btn btn--outline" id="cancel-btn">Cancel</button>
+                <button type="submit" class="btn btn--primary" id="save-product-btn">
+                    <span class="btn-text">Add Product</span>
+                    <span class="btn-loading hidden">Adding...</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div class="modal hidden" id="confirm-modal">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content modal-content--small">
+            <div class="modal-header">
+                <h3 id="confirm-title">Confirm Action</h3>
+            </div>
+            <div class="modal-body">
+                <p id="confirm-message">Are you sure you want to proceed?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn--outline" id="confirm-cancel">Cancel</button>
+                <button type="button" class="btn btn--primary" id="confirm-ok">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

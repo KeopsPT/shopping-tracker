@@ -328,7 +328,7 @@ class ShoppingTracker {
       try {
         // In a real app, you would make a request to extract metadata
         // For demo, we'll just use the URL if it looks like an image
-        if (url.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
+        if (/^https?:\/\//i.test(url) && url.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
           imageUrl = url;
         }
       } catch (error) {
@@ -398,12 +398,23 @@ class ShoppingTracker {
     card.className = 'product-card';
     card.dataset.productId = product.id;
 
-    const imageContent = product.imageUrl === 'placeholder' 
-      ? `<div class="product-card-placeholder">
-           <div class="placeholder-icon">📦</div>
-           <div>Product Image</div>
-         </div>`
-      : `<img src="${product.imageUrl}" alt="${product.name}" class="product-card-image" onerror="this.outerHTML='<div class=\\"product-card-placeholder\\"><div class=\\"placeholder-icon\\">📦</div><div>Image not available</div></div>'">`;
+    let imageElement;
+    if (product.imageUrl === 'placeholder') {
+      imageElement = document.createElement('div');
+      imageElement.className = 'product-card-placeholder';
+      imageElement.innerHTML = '<div class="placeholder-icon">📦</div><div>Product Image</div>';
+    } else {
+      imageElement = document.createElement('img');
+      imageElement.setAttribute('src', product.imageUrl);
+      imageElement.setAttribute('alt', product.name);
+      imageElement.className = 'product-card-image';
+      imageElement.onerror = function() {
+        const ph = document.createElement('div');
+        ph.className = 'product-card-placeholder';
+        ph.innerHTML = '<div class="placeholder-icon">📦</div><div>Image not available</div>';
+        this.replaceWith(ph);
+      };
+    }
 
     card.innerHTML = `
       <div class="product-card-actions">
@@ -414,7 +425,6 @@ class ShoppingTracker {
       <div class="product-card-header">
         <h3 class="product-card-title">${this.escapeHtml(product.name)}</h3>
       </div>
-      ${imageContent}
       <div class="product-card-body">
         <div class="product-person">For: ${this.escapeHtml(product.personName)}</div>
       </div>
@@ -423,6 +433,7 @@ class ShoppingTracker {
         <span class="product-store">${this.escapeHtml(product.storeName)}</span>
       </div>
     `;
+    card.querySelector('.product-card-header').before(imageElement);
 
     // Bind delete button event
     const deleteBtn = card.querySelector('.delete-product-btn');
@@ -581,8 +592,9 @@ class ShoppingTracker {
     textElements.forEach(element => {
       const originalText = element.dataset.originalText || element.textContent;
       element.dataset.originalText = originalText;
-      
-      const highlightedText = originalText.replace(regex, '<mark class="search-highlight">$1</mark>');
+
+      const escapedText = this.escapeHtml(originalText);
+      const highlightedText = escapedText.replace(regex, '<mark class="search-highlight">$1</mark>');
       element.innerHTML = highlightedText;
     });
   }
@@ -611,12 +623,15 @@ class ShoppingTracker {
     // Create notification element
     const notification = document.createElement('div');
     notification.className = `notification notification--${type}`;
-    notification.innerHTML = `
-      <div class="notification-content">
-        <span>${message}</span>
-        <button class="notification-close">✕</button>
-      </div>
-    `;
+    const content = document.createElement('div');
+    content.className = 'notification-content';
+    const span = document.createElement('span');
+    span.textContent = message;
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'notification-close';
+    closeBtn.textContent = '✕';
+    content.append(span, closeBtn);
+    notification.appendChild(content);
 
     // Add styles if not already added
     if (!document.querySelector('#notification-styles')) {

@@ -38,15 +38,35 @@ class ShoppingTracker {
     this.activeTab = 'christmas';
     this.nextId = 4;
     this.confirmedAction = null;
+    this.budgets = { christmas: 500, clothing: 300 };
     this.init();
   }
 
   init() {
+    this.initTheme();
     this.bindEvents();
     this.bindTabEvents();
     this.setActiveTab(this.activeTab);
     this.renderProducts();
     this.updateStats();
+  }
+
+  initTheme() {
+    const stored = localStorage.getItem('theme');
+    if (stored) {
+      document.documentElement.setAttribute('data-color-scheme', stored);
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      document.documentElement.setAttribute('data-color-scheme', 'dark');
+    } else {
+      document.documentElement.setAttribute('data-color-scheme', 'light');
+    }
+  }
+
+  toggleTheme() {
+    const current = document.documentElement.getAttribute('data-color-scheme');
+    const next = current === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-color-scheme', next);
+    localStorage.setItem('theme', next);
   }
 
   bindTabEvents() {
@@ -81,11 +101,14 @@ class ShoppingTracker {
   }
 
   bindEvents() {
+    // Theme toggle
+    document.getElementById('theme-toggle').addEventListener('click', () => this.toggleTheme());
+
     // Add product buttons
     document.querySelectorAll('.add-product-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
-        this.currentCategory = e.target.getAttribute('data-category');
+        this.currentCategory = e.currentTarget.getAttribute('data-category');
         this.openModal();
       });
     });
@@ -94,7 +117,7 @@ class ShoppingTracker {
     document.querySelectorAll('.clear-all-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
-        const category = e.target.getAttribute('data-category');
+        const category = e.currentTarget.getAttribute('data-category');
         this.confirmClearAll(category);
       });
     });
@@ -387,8 +410,9 @@ class ShoppingTracker {
     const existingCards = grid.querySelectorAll('.product-card');
     existingCards.forEach(card => card.remove());
 
-    products.forEach(product => {
+    products.forEach((product, index) => {
       const card = this.createProductCard(product, category);
+      card.style.animationDelay = `${index * 0.05}s`;
       grid.appendChild(card);
     });
   }
@@ -398,7 +422,11 @@ class ShoppingTracker {
     card.className = 'product-card';
     card.dataset.productId = product.id;
 
-    const imageContent = product.imageUrl === 'placeholder' 
+    // Deterministic hue from product name
+    const hue = Math.abs(product.name.split('').reduce((h, c) => c.charCodeAt(0) + ((h << 5) - h), 0) % 360);
+    card.style.setProperty('--placeholder-hue', hue);
+
+    const imageContent = product.imageUrl === 'placeholder'
       ? `<div class="product-card-placeholder">
            <div class="placeholder-icon">📦</div>
            <div>Product Image</div>
@@ -413,6 +441,7 @@ class ShoppingTracker {
       </div>
       <div class="product-card-header">
         <h3 class="product-card-title">${this.escapeHtml(product.name)}</h3>
+        <span class="product-link-icon" title="Visit product page">🔗</span>
       </div>
       ${imageContent}
       <div class="product-card-body">
@@ -424,13 +453,18 @@ class ShoppingTracker {
       </div>
     `;
 
+    // Click card to open product URL
+    card.addEventListener('click', () => {
+      if (product.url) window.open(product.url, '_blank');
+    });
+
     // Bind delete button event
     const deleteBtn = card.querySelector('.delete-product-btn');
     deleteBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      const productId = parseInt(e.target.getAttribute('data-product-id'));
-      const category = e.target.getAttribute('data-category');
-      this.deleteProduct(productId, category);
+      const productId = parseInt(e.currentTarget.getAttribute('data-product-id'));
+      const cat = e.currentTarget.getAttribute('data-category');
+      this.deleteProduct(productId, cat);
     });
 
     return card;
@@ -588,83 +622,79 @@ class ShoppingTracker {
   }
 
   updateStats() {
+    let totalItems = 0;
+    let totalSpend = 0;
+
     ['christmas', 'clothing'].forEach(category => {
       const products = this.data[category];
       const count = products.length;
       const total = products.reduce((sum, product) => sum + product.price, 0);
 
+      totalItems += count;
+      totalSpend += total;
+
       // Update section stats
-      document.getElementById(`${category}-count`).textContent = 
+      document.getElementById(`${category}-count`).textContent =
         `${count} item${count !== 1 ? 's' : ''}`;
-      document.getElementById(`${category}-total`).textContent = 
+      document.getElementById(`${category}-total`).textContent =
         `$${total.toFixed(2)}`;
 
       // Update tab stats
-      document.getElementById(`${category}-tab-count`).textContent = 
+      document.getElementById(`${category}-tab-count`).textContent =
         `${count} item${count !== 1 ? 's' : ''}`;
-      document.getElementById(`${category}-tab-total`).textContent = 
+      document.getElementById(`${category}-tab-total`).textContent =
         `$${total.toFixed(2)}`;
+    });
+
+    // Update header summary
+    const itemsEl = document.getElementById('total-items-count');
+    const spendEl = document.getElementById('total-spending');
+    itemsEl.textContent = totalItems;
+    spendEl.textContent = `$${totalSpend.toFixed(2)}`;
+
+    // Pulse animation on stat update
+    [itemsEl, spendEl].forEach(el => {
+      el.classList.add('stat-updated');
+      el.addEventListener('animationend', () => el.classList.remove('stat-updated'), { once: true });
+    });
+
+    this.updateBudgetBars();
+  }
+
+  updateBudgetBars() {
+    ['christmas', 'clothing'].forEach(category => {
+      const total = this.data[category].reduce((sum, p) => sum + p.price, 0);
+      const budget = this.budgets[category];
+      const percentage = Math.min((total / budget) * 100, 100);
+
+      const fill = document.getElementById(`${category}-budget-fill`);
+      const spent = document.getElementById(`${category}-spent`);
+
+      if (fill) fill.style.width = `${percentage}%`;
+      if (spent) spent.textContent = `$${total.toFixed(2)} spent`;
+
+      if (total > budget) {
+        if (fill) fill.classList.add('over-budget');
+        if (spent) spent.classList.add('over-budget');
+      } else {
+        if (fill) fill.classList.remove('over-budget');
+        if (spent) spent.classList.remove('over-budget');
+      }
     });
   }
 
   showNotification(message, type = 'info') {
-    // Create notification element
+    const icons = { success: '✅', error: '❌', info: 'ℹ️' };
+    const icon = icons[type] || icons.info;
+
     const notification = document.createElement('div');
     notification.className = `notification notification--${type}`;
     notification.innerHTML = `
       <div class="notification-content">
-        <span>${message}</span>
+        <span>${icon} ${message}</span>
         <button class="notification-close">✕</button>
       </div>
     `;
-
-    // Add styles if not already added
-    if (!document.querySelector('#notification-styles')) {
-      const styles = document.createElement('style');
-      styles.id = 'notification-styles';
-      styles.textContent = `
-        .notification {
-          position: fixed;
-          top: 20px;
-          right: 20px;
-          background: var(--color-surface);
-          border: 1px solid var(--color-border);
-          border-radius: var(--radius-lg);
-          padding: var(--space-16);
-          box-shadow: var(--shadow-lg);
-          z-index: 10000;
-          transform: translateX(400px);
-          transition: transform var(--duration-normal) var(--ease-standard);
-          max-width: 400px;
-        }
-        .notification--success {
-          border-left: 4px solid var(--color-success);
-        }
-        .notification--error {
-          border-left: 4px solid var(--color-error);
-        }
-        .notification--info {
-          border-left: 4px solid var(--color-info);
-        }
-        .notification.show {
-          transform: translateX(0);
-        }
-        .notification-content {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          gap: var(--space-12);
-        }
-        .notification-close {
-          background: none;
-          border: none;
-          cursor: pointer;
-          color: var(--color-text-secondary);
-          font-size: var(--font-size-lg);
-        }
-      `;
-      document.head.appendChild(styles);
-    }
 
     document.body.appendChild(notification);
 

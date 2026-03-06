@@ -9,8 +9,22 @@
 <body>
     <div class="container">
         <header class="dashboard-header">
+            <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark mode">
+                <span class="theme-toggle-icon theme-toggle-icon--light">☀️</span>
+                <span class="theme-toggle-icon theme-toggle-icon--dark">🌙</span>
+            </button>
             <h1>🛍️ Shopping Tracker Dashboard</h1>
             <p class="text-secondary">Track your Christmas and Clothing purchases</p>
+            <div class="header-summary">
+                <div class="summary-card">
+                    <span class="summary-label">Total Items</span>
+                    <span class="summary-value" id="total-items-count">0</span>
+                </div>
+                <div class="summary-card">
+                    <span class="summary-label">Total Spending</span>
+                    <span class="summary-value" id="total-spending">$0.00</span>
+                </div>
+            </div>
         </header>
 
         <!-- Tab Navigation -->
@@ -50,6 +64,15 @@
                                 <span class="total-price" id="christmas-total">$0.00</span>
                             </div>
                         </div>
+                        <div class="budget-bar-container">
+                            <div class="budget-bar-labels">
+                                <span class="budget-spent" id="christmas-spent">$0.00 spent</span>
+                                <span class="budget-limit" id="christmas-budget-limit">Budget: $500</span>
+                            </div>
+                            <div class="budget-bar">
+                                <div class="budget-bar-fill" id="christmas-budget-fill" style="width: 0%"></div>
+                            </div>
+                        </div>
                         <div class="section-controls">
                             <div class="controls-row">
                                 <select class="form-control sort-select" id="christmas-sort">
@@ -71,12 +94,22 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="products-grid" id="christmas-grid">
                         <div class="empty-state" id="christmas-empty">
-                            <div class="empty-icon">🎁</div>
+                            <div class="empty-illustration">
+                                <div class="empty-icon">🎁</div>
+                                <div class="empty-sparkles">
+                                    <span class="sparkle">✨</span>
+                                    <span class="sparkle">✨</span>
+                                    <span class="sparkle">✨</span>
+                                </div>
+                            </div>
                             <h3>No Christmas gifts yet!</h3>
                             <p>Start adding products to track your holiday shopping.</p>
+                            <button class="btn btn--primary btn--sm empty-cta add-product-btn" data-category="christmas">
+                                ➕ Add Your First Product
+                            </button>
                         </div>
                     </div>
                 </section>
@@ -91,6 +124,15 @@
                             <div class="section-stats">
                                 <span class="item-count" id="clothing-count">0 items</span>
                                 <span class="total-price" id="clothing-total">$0.00</span>
+                            </div>
+                        </div>
+                        <div class="budget-bar-container">
+                            <div class="budget-bar-labels">
+                                <span class="budget-spent" id="clothing-spent">$0.00 spent</span>
+                                <span class="budget-limit" id="clothing-budget-limit">Budget: $300</span>
+                            </div>
+                            <div class="budget-bar">
+                                <div class="budget-bar-fill" id="clothing-budget-fill" style="width: 0%"></div>
                             </div>
                         </div>
                         <div class="section-controls">
@@ -114,12 +156,22 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="products-grid" id="clothing-grid">
                         <div class="empty-state" id="clothing-empty">
-                            <div class="empty-icon">👔</div>
+                            <div class="empty-illustration">
+                                <div class="empty-icon">👔</div>
+                                <div class="empty-sparkles">
+                                    <span class="sparkle">✨</span>
+                                    <span class="sparkle">✨</span>
+                                    <span class="sparkle">✨</span>
+                                </div>
+                            </div>
                             <h3>No clothing items yet!</h3>
                             <p>Start adding products to track your fashion purchases.</p>
+                            <button class="btn btn--primary btn--sm empty-cta add-product-btn" data-category="clothing">
+                                ➕ Add Your First Product
+                            </button>
                         </div>
                     </div>
                 </section>
